@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Stat Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(135deg, #2c1810, #1a0f08);
+            min-height: 100vh;
+            color: #d4af37;
+            overflow-x: hidden;
+        }
+
+        .parchment-bg {
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(160, 82, 45, 0.2) 0%, transparent 50%),
+                linear-gradient(45deg, #f4e4bc 0%, #e6d7b8 100%);
+            position: relative;
+        }
+
+        .parchment-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    rgba(139, 69, 19, 0.1) 1px,
+                    transparent 2px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    rgba(160, 82, 45, 0.05) 1px,
+                    transparent 3px
+                );
+            pointer-events: none;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(45deg, #8b4513, #a0522d);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border-bottom: 3px solid #d4af37;
+        }
+
+        .title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 3rem;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #f4e4bc;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #f4e4bc 0%, #e6d7b8 100%);
+            border: 3px solid #8b4513;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            color: #2c1810;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #d4af37, #b8860b, #d4af37);
+            border-radius: 17px;
+            z-index: -1;
+        }
+
+        .card-title {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.5rem;
+            color: #8b4513;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-item {
+            background: rgba(139, 69, 19, 0.1);
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(212, 175, 55, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-name {
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #d4af37;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .stat-modifier {
+            font-size: 1rem;
+            color: #a0522d;
+            margin-top: 0.25rem;
+        }
+
+        .controls {
+            margin-bottom: 1.5rem;
+        }
+
+        .method-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .method-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, #8b4513, #a0522d);
+            color: #f4e4bc;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .method-btn:hover {
+            background: linear-gradient(45deg, #a0522d, #d4af37);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .method-btn.active {
+            background: linear-gradient(45deg, #d4af37, #b8860b);
+            color: #2c1810;
+        }
+
+        .roll-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #d4af37, #b8860b);
+            color: #2c1810;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .roll-btn:hover {
+            background: linear-gradient(45deg, #b8860b, #d4af37);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .roll-btn:active {
+            transform: translateY(0);
+        }
+
+        .dice-animation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 1rem 0;
+            height: 40px;
+            align-items: center;
+        }
+
+        .die {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #f4e4bc, #d4af37);
+            border: 2px solid #8b4513;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #2c1810;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .die.rolling {
+            animation: rollDice 0.8s ease-in-out;
+        }
+
+        @keyframes rollDice {
+            0% { 
+                transform: scale(0) rotateX(0deg) rotateY(0deg);
+                opacity: 0;
+            }
+            50% { 
+                transform: scale(1.2) rotateX(180deg) rotateY(180deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(1) rotateX(360deg) rotateY(360deg);
+                opacity: 1;
+            }
+        }
+
+        .character-info {
+            background: rgba(139, 69, 19, 0.1);
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .total-modifier {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(45deg, rgba(212, 175, 55, 0.2), rgba(139, 69, 19, 0.1));
+            border-radius: 10px;
+            border: 2px solid #d4af37;
+        }
+
+        .total-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-dice {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 3px;
+            animation: float 8s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .method-selector {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements"></div>
+    
+    <div class="header">
+        <h1 class="title">⚔️ Character Creator ⚔️</h1>
+        <p class="subtitle">Forge Your Legend with the Roll of the Dice</p>
+    </div>
+
+    <div class="container">
+        <div class="card parchment-bg">
+            <h2 class="card-title">🎲 Ability Score Generator</h2>
+            
+            <div class="controls">
+                <div class="method-selector">
+                    <button class="method-btn active" data-method="4d6">4d6 Drop Lowest</button>
+                    <button class="method-btn" data-method="3d6">3d6 Straight</button>
+                    <button class="method-btn" data-method="point-buy">Point Buy (27)</button>
+                    <button class="method-btn" data-method="standard">Standard Array</button>
+                </div>
+                
+                <button class="roll-btn" onclick="rollStats()">
+                    🎲 Roll for Glory! 🎲
+                </button>
+            </div>
+
+            <div class="dice-animation" id="diceAnimation"></div>
+
+            <div class="character-info">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <strong>Rolling Method:</strong> <span id="currentMethod">4d6 Drop Lowest</span>
+                </div>
+                <div style="text-align: center; font-style: italic;">
+                    "The dice of fate determine your destiny..."
+                </div>
+            </div>
+        </div>
+
+        <div class="card parchment-bg">
+            <h2 class="card-title">📜 Character Statistics</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-name">Strength</div>
+                    <div class="stat-value" id="str-value">10</div>
+                    <div class="stat-modifier" id="str-mod">(+0)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-name">Dexterity</div>
+                    <div class="stat-value" id="dex-value">10</div>
+                    <div class="stat-modifier" id="dex-mod">(+0)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-name">Constitution</div>
+                    <div class="stat-value" id="con-value">10</div>
+                    <div class="stat-modifier" id="con-mod">(+0)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-name">Intelligence</div>
+                    <div class="stat-value" id="int-value">10</div>
+                    <div class="stat-modifier" id="int-mod">(+0)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-name">Wisdom</div>
+                    <div class="stat-value" id="wis-value">10</div>
+                    <div class="stat-modifier" id="wis-mod">(+0)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-name">Charisma</div>
+                    <div class="stat-value" id="cha-value">10</div>
+                    <div class="stat-modifier" id="cha-mod">(+0)</div>
+                </div>
+            </div>
+
+            <div class="total-modifier">
+                <div><strong>Total Modifier Sum:</strong></div>
+                <div class="total-value" id="totalMod">+0</div>
+                <div style="font-size: 0.9rem; margin-top: 0.5rem; color: #8b4513;">
+                    <span id="characterAssessment">A balanced adventurer awaits!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = '4d6';
+        
+        // Initialize floating dice background
+        function createFloatingDice() {
+            const container = document.querySelector('.floating-elements');
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const dice = document.createElement('div');
+                    dice.className = 'floating-dice';
+                    dice.style.left = Math.random() * 100 + '%';
+                    dice.style.animationDelay = Math.random() * 8 + 's';
+                    dice.style.animationDuration = (8 + Math.random() * 4) + 's';
+                    container.appendChild(dice);
+                    
+                    setTimeout(() => {
+                        dice.remove();
+                    }, 12000);
+                }, i * 2000);
+            }
+        }
+
+        // Start floating dice animation
+        createFloatingDice();
+        setInterval(createFloatingDice, 20000);
+
+        // Method selection
+        document.querySelectorAll('.method-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentMethod = this.dataset.method;
+                document.getElementById('currentMethod').textContent = this.textContent;
+            });
+        });
+
+        function rollDie(sides) {
+            return Math.floor(Math.random() * sides) + 1;
+        }
+
+        function roll4d6DropLowest() {
+            const rolls = [rollDie(6), rollDie(6), rollDie(6), rollDie(6)];
+            rolls.sort((a, b) => b - a);
+            return rolls.slice(0, 3).reduce((sum, roll) => sum + roll, 0);
+        }
+
+        function roll3d6() {
+            return rollDie(6) + rollDie(6) + rollDie(6);
+        }
+
+        function getStandardArray() {
+            const array = [15, 14, 13, 12, 10, 8];
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function getPointBuyArray() {
+            // Simulate a reasonable point-buy allocation
+            const arrays = [
+                [15, 14, 13, 12, 10, 8],
+                [15, 15, 10, 10, 10, 10],
+                [14, 14, 14, 10, 10, 8],
+                [15, 13, 13, 12, 12, 8]
+            ];
+            return arrays[Math.floor(Math.random() * arrays.length)];
+        }
+
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function animateDiceRoll(callback) {
+            const diceContainer = document.getElementById('diceAnimation');
+            diceContainer.innerHTML = '';
+            
+            const diceCount = currentMethod === '3d6' ? 3 : 4;
+            
+            for (let i = 0; i < diceCount; i++) {
+                setTimeout(() => {
+                    const die = document.createElement('div');
+                    die.className = 'die rolling';
+                    die.textContent = rollDie(6);
+                    diceContainer.appendChild(die);
+                }, i * 150);
+            }
+            
+            setTimeout(() => {
+                diceContainer.innerHTML = '';
+                callback();
+            }, 1200);
+        }
+
+        function updateStats(stats) {
+            const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+            let totalMod = 0;
+            
+            statNames.forEach((stat, index) => {
+                const value = stats[index];
+                const modifier = calculateModifier(value);
+                totalMod += modifier;
+                
+                document.getElementById(`${stat}-value`).textContent = value;
+                document.getElementById(`${stat}-mod`).textContent = 
+                    `(${modifier >= 0 ? '+' : ''}${modifier})`;
+            });
+            
+            document.getElementById('totalMod').textContent = 
+                `${totalMod >= 0 ? '+' : ''}${totalMod}`;
+            
+            // Character assessment
+            let assessment = '';
+            if (totalMod >= 8) assessment = 'Legendary hero material! 🌟';
+            else if (totalMod >= 4) assessment = 'A formidable adventurer! ⚔️';
+            else if (totalMod >= 0) assessment = 'A capable hero! 🛡️';
+            else if (totalMod >= -4) assessment = 'An underdog with potential! 💪';
+            else assessment = 'A challenging but rewarding journey awaits! 🎭';
+            
+            document.getElementById('characterAssessment').textContent = assessment;
+        }
+
+        function rollStats() {
+            animateDiceRoll(() => {
+                let stats = [];
+                
+                switch(currentMethod) {
+                    case '4d6':
+                        for (let i = 0; i < 6; i++) {
+                            stats.push(roll4d6DropLowest());
+                        }
+                        break;
+                    case '3d6':
+                        for (let i = 0; i < 6; i++) {
+                            stats.push(roll3d6());
+                        }
+                        break;
+                    case 'point-buy':
+                        stats = getPointBuyArray();
+                        break;
+                    case 'standard':
+                        stats = getStandardArray();
+                        break;
+                }
+                
+                updateStats(stats);
+            });
+        }
+
+        // Initialize with default stats
+        rollStats();
+    </script>
+</body>
+</html>
